@@ -12,22 +12,25 @@ import com.android.example.paging.pagingwithnetwork.reddit.db.RedditPostDao
 import com.android.example.paging.pagingwithnetwork.reddit.db.SubredditRemoteKeyDao
 import com.android.example.paging.pagingwithnetwork.reddit.vo.RedditPost
 import com.android.example.paging.pagingwithnetwork.reddit.vo.SubredditRemoteKey
+import kotlinx.coroutines.delay
 import retrofit2.HttpException
 import java.io.IOException
 
 @OptIn(ExperimentalPagingApi::class)
 class PageKeyedRemoteMediator(
-    private val db: RedditDb,
-    private val redditApi: RedditApi,
-    private val subredditName: String
+        private val db: RedditDb,
+        private val redditApi: RedditApi,
+        private val subredditName: String
 ) : RemoteMediator<Int, RedditPost>() {
     private val postDao: RedditPostDao = db.posts()
     private val remoteKeyDao: SubredditRemoteKeyDao = db.remoteKeys()
 
     override suspend fun load(
-        loadType: LoadType,
-        state: PagingState<Int, RedditPost>
+            loadType: LoadType,
+            state: PagingState<Int, RedditPost>
     ): MediatorResult {
+        delay(3000)
+
         try {
             // Get the closest item from PagingState that we want to load data around.
             val loadKey = when (loadType) {
@@ -53,13 +56,13 @@ class PageKeyedRemoteMediator(
             }
 
             val data = redditApi.getTop(
-                subreddit = subredditName,
-                after = loadKey,
-                before = null,
-                limit = when (loadType) {
-                    REFRESH -> state.config.initialLoadSize
-                    else -> state.config.pageSize
-                }
+                    subreddit = subredditName,
+                    after = loadKey,
+                    before = null,
+                    limit = when (loadType) {
+                        REFRESH -> state.config.initialLoadSize
+                        else -> state.config.pageSize
+                    }
             ).data
 
             val items = data.children.map { it.data }
